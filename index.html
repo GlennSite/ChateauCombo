@@ -4,49 +4,86 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reconnaissance de cartes Château Combo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        video {
+            width: 100%;
+            max-width: 400px;
+            height: auto;
+            border: 2px solid #ccc;
+        }
+        canvas {
+            display: none;
+        }
+        #captureButton {
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
     <h1>Reconnaissance de cartes Château Combo</h1>
-    <video id="video" width="320" height="240" autoplay></video>
-    <button id="capture">Capturer l'image</button>
-    <canvas id="canvas" style="display: none;"></canvas>
+
+    <!-- Affichage du flux de la caméra -->
+    <video id="video" autoplay></video>
+    
+    <!-- Bouton pour capturer une image -->
+    <button id="captureButton">Capturer l'image</button>
+
+    <!-- Canvas pour l'image capturée -->
+    <canvas id="canvas" width="400" height="300"></canvas>
+
+    <!-- Zone de résultat -->
     <p id="result"></p>
 
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
     <script>
         const video = document.getElementById('video');
-        const captureButton = document.getElementById('capture');
+        const captureButton = document.getElementById('captureButton');
         const canvas = document.getElementById('canvas');
         const resultElement = document.getElementById('result');
         let stream;
 
-        // Accéder à la caméra
+        // Demander l'accès à l'appareil photo du mobile
         async function startCamera() {
-            stream = await navigator.mediaDevices.getUserMedia({ video: true });
-            video.srcObject = stream;
+            try {
+                const constraints = {
+                    video: {
+                        facingMode: "environment"  // Utilise l'appareil photo arrière sur les mobiles
+                    }
+                };
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = stream;
+            } catch (err) {
+                console.error("Erreur d'accès à la caméra : ", err);
+            }
         }
 
-        // Capturer l'image
+        // Capture de l'image lorsque le bouton est cliqué
         captureButton.addEventListener('click', () => {
             const context = canvas.getContext('2d');
+            // Dessiner l'image vidéo sur le canvas
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
-            // Ici, on peut appeler la fonction de reconnaissance pour traiter l'image
+
+            // Utiliser TensorFlow.js pour analyser l'image
             processImage(canvas);
         });
 
-        // Démarrer la caméra
-        startCamera();
-
-        // Traitement de l'image capturée
+        // Fonction pour traiter l'image capturée avec TensorFlow.js
         async function processImage(canvas) {
             const image = tf.browser.fromPixels(canvas);
-            // Chargez et utilisez votre modèle de reconnaissance d'image ici
-            const model = await tf.loadLayersModel('URL_DU_MODELE'); // Remplacer par le chemin vers le modèle TensorFlow.js
+            const model = await tf.loadLayersModel('URL_DU_MODELE');  // Chargez votre modèle ici
 
-            // Faites la prédiction
+            // Faire une prédiction avec le modèle
             const predictions = model.predict(image.expandDims(0));
-            resultElement.textContent = 'Carte reconnue: ' + predictions;
+            // Afficher le résultat de la reconnaissance
+            resultElement.textContent = 'Carte reconnue : ' + predictions;
         }
+
+        // Démarrer la caméra au chargement de la page
+        startCamera();
     </script>
 </body>
 </html>
