@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reconnaissance de Carte de Jeu</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            text-align: center;
+        }
+        input[type="file"] {
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Reconnaissance de Carte de Jeu</h1>
+        <input type="file" id="imageInput" accept="image/*" capture="camera">
+        <button onclick="uploadImage()">Télécharger l'image</button>
+        <br><br>
+        <div id="result"></div>
+    </div>
+    <script>
+        function uploadImage() {
+            const imageInput = document.getElementById('imageInput');
+            const formData = new FormData();
+            formData.append('file', imageInput.files[0]);
+
+            fetch('/recognize_card', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('result').textContent = "Carte Identifiée : " + data.cardName;
+            })
+            .catch(error => {
+                console.error("Erreur:", error);
+            });
+        }
+    </script>
+</body>
+</html>
