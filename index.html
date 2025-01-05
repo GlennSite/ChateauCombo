@@ -3,50 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reconnaissance de Carte de Jeu</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f4f4f4;
-        }
-        .container {
-            text-align: center;
-        }
-        input[type="file"] {
-            margin: 20px;
-        }
-    </style>
+    <title>Reconnaissance de cartes Château Combo</title>
 </head>
 <body>
-    <div class="container">
-        <h1>Reconnaissance de Carte de Jeu</h1>
-        <input type="file" id="imageInput" accept="image/*" capture="camera">
-        <button onclick="uploadImage()">Télécharger l'image</button>
-        <br><br>
-        <div id="result"></div>
-    </div>
-    <script>
-        function uploadImage() {
-            const imageInput = document.getElementById('imageInput');
-            const formData = new FormData();
-            formData.append('file', imageInput.files[0]);
+    <h1>Reconnaissance de cartes Château Combo</h1>
+    <video id="video" width="320" height="240" autoplay></video>
+    <button id="capture">Capturer l'image</button>
+    <canvas id="canvas" style="display: none;"></canvas>
+    <p id="result"></p>
 
-            fetch('/recognize_card', {
-                method: 'POST',
-                body: formData,
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('result').textContent = "Carte Identifiée : " + data.cardName;
-            })
-            .catch(error => {
-                console.error("Erreur:", error);
-            });
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script>
+        const video = document.getElementById('video');
+        const captureButton = document.getElementById('capture');
+        const canvas = document.getElementById('canvas');
+        const resultElement = document.getElementById('result');
+        let stream;
+
+        // Accéder à la caméra
+        async function startCamera() {
+            stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            video.srcObject = stream;
+        }
+
+        // Capturer l'image
+        captureButton.addEventListener('click', () => {
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            // Ici, on peut appeler la fonction de reconnaissance pour traiter l'image
+            processImage(canvas);
+        });
+
+        // Démarrer la caméra
+        startCamera();
+
+        // Traitement de l'image capturée
+        async function processImage(canvas) {
+            const image = tf.browser.fromPixels(canvas);
+            // Chargez et utilisez votre modèle de reconnaissance d'image ici
+            const model = await tf.loadLayersModel('URL_DU_MODELE'); // Remplacer par le chemin vers le modèle TensorFlow.js
+
+            // Faites la prédiction
+            const predictions = model.predict(image.expandDims(0));
+            resultElement.textContent = 'Carte reconnue: ' + predictions;
         }
     </script>
 </body>
